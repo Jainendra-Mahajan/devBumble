@@ -1,0 +1,21 @@
+{
+  "name": "devbumble",
+  "version": "1.0.0",
+  "description": "Buble for Devs",
+  "keywords": [
+    "Nodejs",
+    "Javascript",
+    "Backend"
+  ],
+  "license": "ISC",
+  "author": "Jainendra",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

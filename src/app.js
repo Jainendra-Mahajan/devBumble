@@ -3,15 +3,11 @@ const app = express();
 const connectDb = require("./config/database")
 const User = require("./model/user");
 
+app.use(express.json());
+
 app.post("/signup", async (req, res) => {
 
-    //created a new instance of the user model.
-    const user = new User({
-        firstName: "Jainendra",
-        lastName: "Mahajan",
-        email: "test@test.com",
-        password: "Test1234"
-    })
+    const user = new User(req.body)
 
     //Most Mongoose methods returns a promise handle error in try catch
     try {

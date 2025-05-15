@@ -2,9 +2,12 @@ const express = require("express");
 const app = express();
 const connectDb = require("./config/database")
 const User = require("./model/user");
+const { Model } = require("mongoose");
 
 app.use(express.json());
 
+
+//api for creating a new User
 app.post("/signup", async (req, res) => {
 
     const user = new User(req.body)
@@ -17,6 +20,93 @@ app.post("/signup", async (req, res) => {
         res.status(400).send("Unable to add User to Database " + err.message)
     }
 
+})
+
+//api to get user by email
+app.get("/user", async (req, res) => {
+    const userEmail = req.body.email;
+    console.log(userEmail);
+
+    try {
+        const user = await User.find({ email: userEmail })
+
+        if (user.length > 0) {
+            console.log("User found sucessfully");
+            res.send(user);
+        }
+        else {
+            res.status(404).send("User not found!!")
+        }
+
+    }
+    catch (err) {
+        res.status(404).send("User not found!!")
+    }
+})
+
+
+app.get("/feed", async (req, res) => {
+
+    try {
+        const allUsers = await User.find({});
+        if (allUsers.length > 0) {
+            res.send(allUsers);
+        }
+        else {
+            res.status(404).send("No User present")
+        }
+    } catch (err) {
+        res.status(404).send("Something went wrong")
+    }
+})
+
+app.get("/userById", async (req, res) => {
+    const userId = req.body._id;
+    console.log(userId);
+
+    try {
+        const user = await User.findById(userId)
+
+        if (user) {
+            console.log("User found sucessfully");
+            res.send(user);
+        }
+        else {
+            res.status(404).send("User not found!!")
+        }
+
+    }
+    catch (err) {
+        res.status(404).send("User not found!!")
+    }
+})
+
+app.delete("/user", async (req, res) => {
+    const userId = req.body._id;
+    // console.log(userId);
+    try {
+        const user = await User.findByIdAndDelete(userId);
+        res.send("User deleted Successfully")
+
+    }
+    catch (err) {
+        res.status(404).send("Something went wrong!!")
+    }
+})
+
+//update data with ID
+app.patch("/user", async (req, res) => {
+    const userId = req.body._id;
+    const updatedData = req.body;
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(userId, updatedData, { returnDocument: 'before' });
+        console.log(updatedUser);
+        res.send("User updated Successfully");
+    }
+    catch (err) {
+        res.status(404).send("Something went wrong")
+    }
 })
 
 connectDb().then(() => {

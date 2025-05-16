@@ -3,17 +3,51 @@ const app = express();
 const connectDb = require("./config/database")
 const User = require("./model/user");
 const { Model } = require("mongoose");
+const { validateSignUp } = require("./utils/validation")
+const bcrypt = require("bcrypt")
 
 app.use(express.json());
+
+app.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email: email });
+
+        if (!user) {
+            throw new Error("Invalid Credentials")
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+
+        if (isPasswordValid) {
+            res.send("User Login Successfull!!")
+        }
+        else {
+            throw new Error("Invalid Credentials")
+        }
+    }
+    catch (err) {
+        res.status(400).send("Error: " + err.message)
+    }
+
+
+})
 
 
 //api for creating a new User
 app.post("/signup", async (req, res) => {
 
-    const user = new User(req.body)
-
     //Most Mongoose methods returns a promise handle error in try catch
     try {
+        validateSignUp(req);
+
+        const { firstName, lastName, email, password } = req.body
+
+        const passwordHash = await bcrypt.hash(password, 10);
+        console.log(passwordHash);
+
+        const user = new User({ firstName, lastName, email, password: passwordHash })
+
         await user.save();
         res.send("User Added Successfully");
     } catch (err) {

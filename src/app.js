@@ -5,8 +5,13 @@ const User = require("./model/user");
 const { Model } = require("mongoose");
 const { validateSignUp } = require("./utils/validation")
 const bcrypt = require("bcrypt")
+const cookie = require("cookie-parser");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken")
+const { userAuth } = require("../src/Middlewares/auth")
 
 app.use(express.json());
+app.use(cookieParser())
 
 app.post("/login", async (req, res) => {
     try {
@@ -17,9 +22,13 @@ app.post("/login", async (req, res) => {
             throw new Error("Invalid Credentials")
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await user.validatePassword(password);
 
         if (isPasswordValid) {
+            //create JWT token and send back cookie
+            const token = await user.getJWT();
+
+            res.cookie("token", token, { expires: new Date(Date.now() + 900000) });
             res.send("User Login Successfull!!")
         }
         else {
@@ -31,6 +40,25 @@ app.post("/login", async (req, res) => {
     }
 
 
+})
+
+app.get("/profile", userAuth, (req, res) => {
+    try {
+        const user = req.user;
+        res.send(user)
+    }
+    catch (err) {
+        res.status(400).send("Error:" + "Session Expired");
+    }
+})
+
+app.post("/sendConnectionRequest", userAuth, async (req, res) => {
+    try {
+        const { firstName } = req.user
+        res.send("Connection request sent by " + firstName)
+    } catch (error) {
+        res.status(400).send("Error: " + error.message);
+    }
 })
 
 

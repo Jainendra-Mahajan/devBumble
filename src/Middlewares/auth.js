@@ -1,22 +1,31 @@
-const adminAuth = (req, res, next) => {
-    const token = "xyz";
-    if (token === 'xyz') {
-        console.log("User Authenticated");
-        next();
-    }
-    else {
-        res.status(401).send("Unauthorized Request");
-    }
-}
+const jwt = require("jsonwebtoken")
+const User = require("../model/user");
 
-const userAuth = (req, res, next) => {
-    const token = "xyz";
-    if (token === 'xyz') {
-        console.log("User Authenticated");
+const userAuth = async (req, res, next) => {
+
+
+    try {
+        const { token } = req.cookies;
+
+        if (!token) {
+            throw new Error("Token Not Valid");
+        }
+
+        const decodeMessage = jwt.verify(token, "dev@bumble!878");
+        const { _id } = decodeMessage;
+
+        const user = await User.findById(_id);
+
+        if (!user) {
+            throw new Error("User Not found");
+        }
+
+        req.user = user;
+
         next();
+    } catch (err) {
+        res.status(400).send("Error: " + err.message)
     }
-    else {
-        res.status(401).send("Unauthorized Request");
-    }
+
 }
-module.exports = { adminAuth, userAuth };
+module.exports = { userAuth };

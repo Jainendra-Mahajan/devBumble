@@ -3,7 +3,6 @@ const User = require("../model/user");
 
 const userAuth = async (req, res, next) => {
 
-
     try {
         const { token } = req.cookies;
 
@@ -28,4 +27,5 @@ const userAuth = async (req, res, next) => {
     }
 
 }
+
 module.exports = { userAuth };

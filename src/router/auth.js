@@ -22,7 +22,7 @@ authRouter.post("/login", async (req, res) => {
             const token = await user.getJWT();
 
             res.cookie("token", token, { expires: new Date(Date.now() + 900000) });
-            res.send("User Login Successfull!!")
+            res.send(user)
         }
         else {
             throw new Error("Invalid Credentials")
@@ -52,9 +52,8 @@ authRouter.post("/signup", async (req, res) => {
         await user.save();
         res.send("User Added Successfully");
     } catch (err) {
-        res.status(400).send("Unable to add User to Database " + err.message)
+        res.status(400).json({ error: err.message });
     }
-
 })
 
 authRouter.post("/logout", async (req, res) => {

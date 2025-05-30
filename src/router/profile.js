@@ -13,20 +13,18 @@ profileRouter.get("/profile", userAuth, (req, res) => {
         res.send(user)
     }
     catch (err) {
-        res.status(400).send("Error:" + "Session Expired");
+        res.status(401).send("UnAuthorized");
     }
 })
 
 //api to to get user by id
 profileRouter.get("/userById", async (req, res) => {
     const userId = req.body._id;
-    console.log(userId);
 
     try {
         const user = await User.findById(userId)
 
         if (user) {
-            console.log("User found sucessfully");
             res.send(user);
         }
         else {
@@ -46,7 +44,6 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
         }
 
         const loggedInUser = req.user;
-        console.log(loggedInUser);
 
         Object.keys(req.body).forEach((key) => loggedInUser[key] = req.body[key]);
 
@@ -59,6 +56,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         res.status(400).send("Error: " + err.message);
     }
 })

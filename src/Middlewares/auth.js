@@ -10,7 +10,7 @@ const userAuth = async (req, res, next) => {
             throw new Error("Token Not Valid");
         }
 
-        const decodeMessage = jwt.verify(token, "dev@bumble!878");
+        const decodeMessage = jwt.verify(token, process.env.JWT_SECRET);
         const { _id } = decodeMessage;
 
         const user = await User.findById(_id);

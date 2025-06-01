@@ -8,6 +8,8 @@ const requestRouter = require("./router/request");
 const { userRouter } = require("./router/user");
 const cors = require("cors");
 const { paymentRouter } = require("./router/payment");
+const http = require("http");
+const initializeSocket = require("./utils/socket");
 require('dotenv').config()
 
 app.use(cors({
@@ -24,10 +26,12 @@ app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
 
+const server = http.createServer(app);
+initializeSocket(server);
 
 connectDb().then(() => {
     console.log("Connected to DB Successfully");
-    app.listen(process.env.PORT, () => {
+    server.listen(process.env.PORT, () => {
         console.log("Server is running on port 7777")
     });
 }).catch((err) => {

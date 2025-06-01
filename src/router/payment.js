@@ -30,7 +30,7 @@ paymentRouter.post("/payment/create", userAuth, async (req, res) => {
         const payment = new PaymentModel({
             userId: req.user._id,
             orderId: order.id,
-            amount: order.amount,
+            amount: order.amount / 100,
             currency: order.currency,
             receipt: order.receipt,
             notes: order.notes,
@@ -50,7 +50,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
 
     try {
 
-        const webhookSignature = req.headers('X-Razorpay-Signature');
+        const webhookSignature = req.get('X-Razorpay-Signature');
 
         const isWebhookValid = validateWebhookSignature(JSON.stringify(req.body),
             webhookSignature,
@@ -64,7 +64,7 @@ paymentRouter.post("/payment/webhook", async (req, res) => {
         const paymentDetails = req.body.payload.payment.entity
 
         // Update the payment status in your database.
-        const payment = await PaymentModel.findOne({ orderId: paymentDetails.id });
+        const payment = await PaymentModel.findOne({ orderId: paymentDetails.order_id });
         payment.status = paymentDetails.status;
         await payment.save();
 
@@ -89,6 +89,8 @@ paymentRouter.get("/premium/verify", userAuth, async (req, res) => {
         if (user.isPremium) {
             return res.json({ ...user })
         }
+
+        return res.json({ ...user })
     }
     catch (error) {
         res.status(500).json({ message: error.message });

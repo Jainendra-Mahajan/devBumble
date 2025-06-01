@@ -49,7 +49,7 @@ const userSchema = mongoose.Schema({
         }
     },
 
-    isPremumium: {
+    isPremium: {
         type: Boolean,
         default: false,
     },

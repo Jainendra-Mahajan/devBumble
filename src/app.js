@@ -10,6 +10,7 @@ const cors = require("cors");
 const { paymentRouter } = require("./router/payment");
 const http = require("http");
 const initializeSocket = require("./utils/socket");
+const { chatRouter } = require("./router/chat");
 require('dotenv').config()
 
 app.use(cors({
@@ -25,6 +26,7 @@ app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", paymentRouter);
+app.use("/", chatRouter);
 
 const server = http.createServer(app);
 initializeSocket(server);

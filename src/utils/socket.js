@@ -1,6 +1,8 @@
 const socket = require("socket.io");
 const crypto = require('crypto');
 const { Chat } = require("../model/chat");
+const connectionrequest = require("../model/connectionrequest");
+const onlineUsers = new Map();
 
 const getRoomID = ({ userId, targetId }) => {
     return crypto.createHash("sha256").update([userId, targetId].sort().join("_")).digest("hex")
@@ -19,6 +21,25 @@ const initializeSocket = (server) => {
         socket.on("joinChat", ({ firstName, userId, targetId }) => {
             const roomId = getRoomID({ userId, targetId })
             socket.join(roomId);
+
+
+            onlineUsers.set(userId, {
+                socketId: socket?.id,
+                firstName: firstName
+            })
+            // console.log("User joined:", firstName, userId);
+            io.emit("onlineUsers", Array.from(onlineUsers.entries()));
+        });
+
+        socket.on("disconnect", () => {
+            for (const [userId, data] of onlineUsers.entries()) {
+                if (data.socketId === socket.id) {
+                    onlineUsers.delete(userId);
+                    break;
+                }
+                io.emit("onlineUsers", Array.from(onlineUsers.entries()));
+            }
+
         });
 
         //send the receieved message to end party
@@ -27,29 +48,45 @@ const initializeSocket = (server) => {
             try {
                 const roomId = getRoomID({ userId, targetId });
 
-                //find the chat if already present
-                let chat = await Chat.findOne({
-                    participants: { $all: [userId, targetId] }
-                });
+                //check if both the users and friends
+                const connectionStatus = await connectionrequest.findOne({
+                    $or: [
+                        { fromUserId: userId, toUserId: targetId, status: "accepted" },
+                        { fromUserId: targetId, toUserId: userId, status: "accepted" },
+                    ]
+                })
 
-                //create a new chat if not initiated
-                if (!chat) {
-                    chat = new Chat({
-                        participants: [userId, targetId],
-                        messages: []
-                    })
+                if (connectionStatus) {
+
+                    //find the chat if already present
+                    let chat = await Chat.findOne({
+                        participants: { $all: [userId, targetId] }
+                    });
+
+                    //create a new chat if not initiated
+                    if (!chat) {
+                        chat = new Chat({
+                            participants: [userId, targetId],
+                            messages: []
+                        })
+                    }
+
+                    chat.messages.push({
+                        senderId: userId,
+                        text
+                    });
+
+                    await chat.save();
+
+                    io.to(roomId).emit("messageReceived", { firstName, lastName, text });
                 }
 
-                chat.messages.push({
-                    senderId: userId,
-                    text
-                });
-
-                await chat.save();
-
-                io.to(roomId).emit("messageReceived", { firstName, lastName, text });
+                else {
+                    socket.emit("error", { message: "Connection not accepted between users." });
+                    return;
+                }
             } catch (error) {
-                console.log(err);
+                console.log(error);
             }
         });
 

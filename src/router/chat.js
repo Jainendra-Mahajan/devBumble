@@ -12,7 +12,7 @@ chatRouter.get("/chat/:targetId", userAuth, async (req, res) => {
             participants: { $all: [userId, targetId] }
         }).populate({
             path: "messages.senderId",
-            select: "firstName lastName",
+            select: "firstName lastName photoUrl",
         })
 
         if (!chat) {
@@ -25,7 +25,7 @@ chatRouter.get("/chat/:targetId", userAuth, async (req, res) => {
         }
         res.json({ chat })
     } catch (error) {
-        console.log(error);
+        res.status(400).send("Error: " + error.message);
     }
 })
 

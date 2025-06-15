@@ -2,6 +2,7 @@ const socket = require("socket.io");
 const crypto = require('crypto');
 const { Chat } = require("../model/chat");
 const connectionrequest = require("../model/connectionrequest");
+const user = require("../model/user");
 const onlineUsers = new Map();
 
 const getRoomID = ({ userId, targetId }) => {
@@ -27,7 +28,6 @@ const initializeSocket = (server) => {
                 socketId: socket?.id,
                 firstName: firstName
             })
-            // console.log("User joined:", firstName, userId);
             io.emit("onlineUsers", Array.from(onlineUsers.entries()));
         });
 
@@ -37,10 +37,10 @@ const initializeSocket = (server) => {
                     onlineUsers.delete(userId);
                     break;
                 }
-                io.emit("onlineUsers", Array.from(onlineUsers.entries()));
             }
 
-        });
+            io.emit("onlineUsers", Array.from(onlineUsers.entries()));
+        })
 
         //send the receieved message to end party
         socket.on("sendMessage", async ({ firstName, lastName, userId, targetId, text }) => {
@@ -78,7 +78,9 @@ const initializeSocket = (server) => {
 
                     await chat.save();
 
-                    io.to(roomId).emit("messageReceived", { firstName, lastName, text });
+                    const sender = await user.findById({ _id: userId }).select("photoUrl")
+
+                    io.to(roomId).emit("messageReceived", { firstName, lastName, text, photoUrl: sender?.photoUrl || null });
                 }
 
                 else {
